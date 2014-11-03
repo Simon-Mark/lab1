@@ -359,7 +359,7 @@ concurrent_test(int nt)
 	printf("start concurrent_test (%d threads) ...", nt);
 
 	pthread_t th[nt];
-	for(int i = 0; i < nt; i++){
+	for(long int i = 0; i < nt; i++){
 		ret = pthread_create(&th[i], &attr, client1, (void *) i);
 		assert(ret == 0);
 	}
@@ -378,7 +378,7 @@ garbage_collection_test(int nt)
 	printf("start garbage_collection_test ...");
 
 	pthread_t th[nt];
-	for(int i = 0; i < nt; i++){
+	for(long int i = 0; i < nt; i++){
 		ret = pthread_create(&th[i], &attr, client4, (void *) i);
 		assert(ret == 0);
 	}
@@ -411,7 +411,7 @@ lossy_test()
 
 	int nt = 1;
 	pthread_t th[nt];
-	for(int i = 0; i < nt; i++){
+	for(long int i = 0; i < nt; i++){
 		ret = pthread_create(&th[i], &attr, client2, (void *) i);
 		assert(ret == 0);
 	}

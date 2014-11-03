@@ -412,7 +412,7 @@ rpcs::updatestat(unsigned int proc)
 			if (clt->second.size() > maxrep)
 				maxrep = clt->second.size();
 		}
-		jsl_log(JSL_DBG_1, "REPLY WINDOW: clients %d total reply %d max per client %d\n", 
+		jsl_log(JSL_DBG_1, "REPLY WINDOW: clients %ld total reply %d max per client %d\n", 
 				reply_window_.size(), totalrep, maxrep);
 		curr_counts_ = counting_;
 	}
