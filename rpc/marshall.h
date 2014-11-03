@@ -117,6 +117,7 @@ marshall& operator<<(marshall &, char);
 marshall& operator<<(marshall &, unsigned short);
 marshall& operator<<(marshall &, short);
 marshall& operator<<(marshall &, unsigned long long);
+marshall& operator<<(marshall &, unsigned long);
 marshall& operator<<(marshall &, const std::string &);
 
 class unmarshall {
@@ -182,6 +183,7 @@ unmarshall& operator>>(unmarshall &, short &);
 unmarshall& operator>>(unmarshall &, unsigned int &);
 unmarshall& operator>>(unmarshall &, int &);
 unmarshall& operator>>(unmarshall &, unsigned long long &);
+unmarshall& operator>>(unmarshall &, unsigned long &);
 unmarshall& operator>>(unmarshall &, std::string &);
 
 template <class C> marshall &
