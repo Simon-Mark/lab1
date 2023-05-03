@@ -12,6 +12,7 @@
 class lock_client {
  protected:
   rpcc *cl;
+  pthread_mutex_t m_mutex;
  public:
   lock_client(std::string d);
   virtual ~lock_client() {};

@@ -557,11 +557,36 @@ rpcs::dispatch(djob_t *j)
 	c->decref();
 }
 
+
+// clt_nonce: a unique identifier for the client
+// xid: the transaction ID of the corresponding request
+// b: a buffer pointer containing the response message
+// sz: the size of the response message
 void
 rpcs::add_reply(unsigned int clt_nonce, unsigned int xid,
 		char *b, int sz)
 {
 	ScopedLock rwl(&reply_window_m_);
+
+	// Find the response window for a specific client identifier
+	std::map<unsigned int, std::list<reply_t>>::iterator 
+		iter = reply_window_.find(clt_nonce);
+
+	// found the window
+	if(iter != reply_window_.end()) {
+		// Traverse all existing response objects in this window and find out if 
+		// there is a transaction ID corresponding to the current response object
+		std::list<reply_t>::iterator i = iter->second.begin();
+		for(i; i != iter->second.end(); i++) {
+			if(i->xid == xid) {
+				i->buf = b;
+				i->sz = sz;
+				// cb_present: indicates whether the callback function has been called
+				i->cb_present = true;
+				break;
+			}
+		}
+	}
 }
 
 void
@@ -580,12 +605,58 @@ rpcs::free_reply_window(void)
 	reply_window_.clear();
 }
 
+// xid_rep: the transaction ID corresponding to the response returned by the server
 rpcs::rpcstate_t 
 rpcs::checkduplicate_and_update(unsigned int clt_nonce, unsigned int xid,
 		unsigned int xid_rep, char **b, int *sz)
 {
 	ScopedLock rwl(&reply_window_m_);
 
+	// The xids in reply_window_[clt_nonce] are sorted from small to large
+	// The first xid is larger than the requested xid, indicating that the 
+	// requested xid has been discarded
+	if (reply_window_[clt_nonce].front().xid > xid) {
+		return FORGOTTEN;
+	}
+
+	reply_t reply(xid);
+	std::list<reply_t>::iterator iter = reply_window_[clt_nonce].begin();
+
+	for(iter ; iter != reply_window_[clt_nonce].end(); iter++) {
+		if(iter->xid < xid_rep && iter->cb_present == true) {
+			// The response object will be deleted if xid < xid_rep and callback function alread exist
+			free(iter->buf);
+			iter = reply_window_[clt_nonce].erase(iter);
+			iter--;
+		}
+
+		if (iter->xid == xid) {
+			if(iter->cb_present == true) {
+				*b = iter->buf;
+				*sz = iter->sz;
+				return DONE;
+			}
+			else {
+				return INPROGRESS;
+			}
+		}
+
+	}
+
+	// If it does not exist, it means that it is a new request, 
+	// and add the request to the sliding window
+	for(iter = reply_window_[clt_nonce].begin(); iter != reply_window_[clt_nonce].end(); iter++)
+	{
+		if(xid < iter->xid)
+		{
+			reply_window_[clt_nonce].insert(iter, reply);
+			break;
+		}
+	}
+	if(iter == reply_window_[clt_nonce].end())
+	{
+		reply_window_[clt_nonce].push_back(reply);
+	}
 	return NEW;
 }
 
