@@ -8,8 +8,11 @@
 #include "lock_protocol.h"
 #include "lock_client.h"
 #include "rpc.h"
+// #include "lock_server.h"
 
 #include <map>
+
+struct lock;
 
 class lock_server {
 
