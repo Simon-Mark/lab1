@@ -25,6 +25,7 @@ struct lock {
 
 lock_server::lock_server(): nacquire (0) {
   pthread_mutex_init(&mutex, NULL);
+  pthread_cond_init(&cv, NULL);
 }
 
 lock_protocol::status lock_server::stat(int clt, lock_protocol::lockid_t lid, int &r) {
@@ -44,11 +45,12 @@ lock_protocol::status lock_server::release(int clt, lock_protocol::lockid_t lid,
   pthread_mutex_lock(&mutex);
 
   auto iter = lock_map.find(lid);
-  if (iter != lock_map.end()) {
+  if (iter != lock_map.end() && iter->second->state == lock::LOCKED) {
     iter -> second -> state = lock::FREE;
     pthread_cond_broadcast(&iter -> second -> cv);
   } else {
-    ret = lock_protocol::IOERR;
+    // ret = lock_protocol::IOERR;
+    ret = lock_protocol::NOENT;
   }
 
   pthread_mutex_unlock(&mutex);

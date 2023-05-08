@@ -7,6 +7,7 @@
 #include <sstream>
 #include <iostream>
 #include <stdio.h>
+#include <string>
 
 lock_client::lock_client(std::string dst)
 {
@@ -22,10 +23,14 @@ lock_client::lock_client(std::string dst)
 }
 
 int lock_client::stat(lock_protocol::lockid_t lid) {
+  pthread_mutex_lock(&m_mutex);
   int r;  // Store the results returned by the server
   int ret = cl->call(lock_protocol::stat, cl->id(), lid, r);
       //cl->call() :A RPC function used to send a request to the server.
+  // printf("%n\n", &ret);
   assert (ret == lock_protocol::OK);
+
+  pthread_mutex_unlock(&m_mutex);
   return r;
 }
 
@@ -33,17 +38,17 @@ lock_protocol::status lock_client::acquire(lock_protocol::lockid_t lid) {
   pthread_mutex_lock(&m_mutex);
   int r;    
   int ret = cl->call(lock_protocol::acquire, cl->id(), lid, r);
-  assert (ret == lock_protocol::OK);
+  // assert (ret == lock_protocol::OK);
   pthread_mutex_unlock(&m_mutex);
-  return r;
+  return ret;
 }
 
 lock_protocol::status lock_client::release(lock_protocol::lockid_t lid) {
   pthread_mutex_lock(&m_mutex);
   int r;
   int ret = cl->call(lock_protocol::release, cl->id(), lid, r);
-  assert (ret == lock_protocol::OK);
+  // assert (ret == lock_protocol::OK);
   pthread_mutex_unlock(&m_mutex);
-  return r;
+  return ret;
 }
 
